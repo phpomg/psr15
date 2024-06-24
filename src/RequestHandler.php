@@ -16,18 +16,21 @@ class RequestHandler implements RequestHandlerInterface
 
     public function setHandler(
         RequestHandlerInterface $handler
-    ) {
+    ): self {
         $this->handler = $handler;
+        return $this;
     }
 
-    public function pushMiddleware(MiddlewareInterface ...$middlewares)
+    public function pushMiddleware(MiddlewareInterface ...$middlewares): self
     {
         array_push($this->middlewares, ...$middlewares);
+        return $this;
     }
 
-    public function unShiftMiddleware(MiddlewareInterface ...$middlewares)
+    public function unShiftMiddleware(MiddlewareInterface ...$middlewares): self
     {
         array_unshift($this->middlewares, ...$middlewares);
+        return $this;
     }
 
     public function popMiddleware(): ?MiddlewareInterface
