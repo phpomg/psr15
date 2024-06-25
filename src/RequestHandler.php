@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PHPOMG\Psr15;
 
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -11,23 +12,26 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class RequestHandler implements RequestHandlerInterface
 {
+    private $container;
     private $handler;
+
     private $middlewares = [];
 
-    public function setHandler(
-        RequestHandlerInterface $handler
-    ): self {
-        $this->handler = $handler;
-        return $this;
+    public function __construct(
+        ContainerInterface $container,
+        RequestHandlerInterface $requestHandler
+    ) {
+        $this->container = $container;
+        $this->handler = $requestHandler;
     }
 
-    public function pushMiddleware(MiddlewareInterface ...$middlewares): self
+    public function pushMiddleware(...$middlewares): self
     {
         array_push($this->middlewares, ...$middlewares);
         return $this;
     }
 
-    public function unShiftMiddleware(MiddlewareInterface ...$middlewares): self
+    public function unShiftMiddleware(...$middlewares): self
     {
         array_unshift($this->middlewares, ...$middlewares);
         return $this;
@@ -35,12 +39,18 @@ class RequestHandler implements RequestHandlerInterface
 
     public function popMiddleware(): ?MiddlewareInterface
     {
-        return array_pop($this->middlewares);
+        if ($middleware = array_pop($this->middlewares)) {
+            return $this->container->get($middleware);
+        }
+        return null;
     }
 
     public function shiftMiddleware(): ?MiddlewareInterface
     {
-        return array_shift($this->middlewares);
+        if ($middleware = array_shift($this->middlewares)) {
+            return $this->container->get($middleware);
+        }
+        return null;
     }
 
     public function handle(ServerRequestInterface $serverRequest): ResponseInterface
